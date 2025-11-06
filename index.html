@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ali HAC34R DATABASE</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Source Code Pro', monospace;
+    }
+
+    /* Matrix Rain Background */
+    #matrixCanvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        opacity: 0.7;
+    }
+
+    /* Loading Animation */
+    #pageLoader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #000;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    
+    #pageLoader.hidden {
+        opacity: 0;
+        visibility: hidden;
+    }
+    
+    .loader-logo {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+    }
+    
+    .loader-spinner {
+        margin-top: 25px;
+        width: 50px;
+        height: 50px;
+        position: relative;
+    }
+    
+    .loader-spinner::before,
+    .loader-spinner::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 3px solid transparent;
+        border-top-color: #00ff00;
+    }
+    
+    .loader-spinner::before {
+        animation: spin 1s linear infinite;
+    }
+    
+    .loader-spinner::after {
+        border-top-color: #00cc00;
+        animation: spin 1.5s linear infinite reverse;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    body {
+        min-height: 100vh;
+        background: #000;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 20px;
+        padding-top: 40px;
+        position: relative;
+        overflow-y: auto;
+        overflow-x: hidden;
+        color: #00ff00;
+        transition: all 0.5s ease;
+    }
+
+    /* Theme Styles */
+    body.theme-green {
+        --primary-color: #00ff00;
+        --secondary-color: #00cc00;
+        --accent-color: #009900;
+        --bg-color: rgba(0, 20, 0, 0.8);
+        --container-bg: rgba(0, 30, 0, 0.5);
+        --button-bg: #003300;
+        --button-hover: #006600;
+        --glow-color: rgba(0, 255, 0, 0.5);
+        --strong-glow: rgba(0, 255, 0, 0.7);
+    }
+
+    body.theme-blue {
+        --primary-color: #00ccff;
+        --secondary-color: #0099cc;
+        --accent-color: #0066cc;
+        --bg-color: rgba(0, 10, 30, 0.8);
+        --container-bg: rgba(0, 20, 40, 0.5);
+        --button-bg: #003366;
+        --button-hover: #006699;
+        --glow-color: rgba(0, 204, 255, 0.5);
+        --strong-glow: rgba(0, 204, 255, 0.7);
+    }
+
+    body.theme-red {
+        --primary-color: #ff3333;
+        --secondary-color: #cc0000;
+        --accent-color: #990000;
+        --bg-color: rgba(30, 0, 0, 0.8);
+        --container-bg: rgba(50, 0, 0, 0.5);
+        --button-bg: #330000;
+        --button-hover: #660000;
+        --glow-color: rgba(255, 51, 51, 0.5);
+        --strong-glow: rgba(255, 51, 51, 0.7);
+    }
+
+    .container {
+        width: 100%;
+        max-width: 800px;
+        background: var(--bg-color);
+        border-radius: 5px;
+        box-shadow: 0 0 20px var(--glow-color);
+        overflow: hidden;
+        position: relative;
+        z-index: 1;
+        border: 1px solid var(--secondary-color);
+        display: flex;
+        flex-direction: column;
+    }
+
+    @media (max-width: 768px) {
+        .container {
+            min-height: calc(100vh - 40px);
+        }
+    }
+
+    .theme-selector {
+        display: flex;
+        gap: 10px;
+        margin-left: 10px;
+    }
+
+    .theme-btn {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 1px solid var(--primary-color);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .theme-btn.green {
+        background: #00ff00;
+    }
+
+    .theme-btn.blue {
+        background: #00ccff;
+    }
+
+    .theme-btn.red {
+        background: #ff3333;
+    }
+
+    .theme-btn.active {
+        transform: scale(1.2);
+        box-shadow: 0 0 10px var(--primary-color);
+    }
+
+    .header-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--secondary-color);
+        background: var(--container-bg);
+    }
+
+    .logo-section {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .logo {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        object-fit: cover;
+        filter: hue-rotate(90deg);
+    }
+
+    .logo-text {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        text-shadow: 0 0 5px var(--primary-color);
+    }
+
+    .back-btn {
+        padding: 8px 16px;
+        background: var(--button-bg);
+        color: var(--primary-color);
+        border: 1px solid var(--secondary-color);
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        text-decoration: none;
+    }
+
+    .back-btn:hover {
+        background: var(--button-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 0 10px var(--glow-color);
+    }
+
+    .content {
+        padding: 20px;
+        flex: 1;
+    }
+
+    .page-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 8px;
+        text-align: center;
+        text-shadow: 0 0 10px var(--primary-color);
+    }
+
+    .page-subtitle {
+        color: var(--secondary-color);
+        text-align: center;
+        margin-bottom: 25px;
+        font-size: 0.9rem;
+    }
+
+    .search-box {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    input {
+        flex: 1;
+        padding: 12px 16px;
+        border: 1px solid var(--secondary-color);
+        border-radius: 4px;
+        font-size: 1rem;
+        outline: none;
+        transition: all 0.3s ease;
+        background: var(--bg-color);
+        color: var(--primary-color);
+        box-shadow: inset 0 0 5px var(--glow-color);
+    }
+
+    input::placeholder {
+        color: var(--accent-color);
+    }
+
+    input:focus {
+        border-color: var(--primary-color);
+        background: var(--container-bg);
+        box-shadow: 0 0 10px var(--strong-glow), inset 0 0 5px var(--glow-color);
+    }
+
+    button {
+        padding: 12px 24px;
+        background: var(--button-bg);
+        color: var(--primary-color);
+        border: 1px solid var(--secondary-color);
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    button:hover {
+        background: var(--button-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 0 15px var(--strong-glow);
+    }
+
+    #loader {
+        text-align: center;
+        padding: 20px;
+        color: var(--primary-color);
+        font-weight: 600;
+        display: none;
+    }
+
+    .record {
+        background: var(--bg-color);
+        border: 1px solid var(--secondary-color);
+        border-radius: 4px;
+        padding: 15px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 10px var(--glow-color);
+    }
+
+    .record:hover {
+        box-shadow: 0 0 15px var(--strong-glow);
+    }
+
+    .record p {
+        margin: 8px 0;
+        color: var(--primary-color);
+    }
+
+    .record strong {
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+
+    .copy-btn {
+        width: 100%;
+        margin-top: 10px;
+        background: var(--button-hover);
+        padding: 10px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        border: 1px solid var(--secondary-color);
+        border-radius: 4px;
+        color: var(--primary-color);
+        transition: all 0.3s ease;
+    }
+
+    .copy-btn:hover {
+        background: var(--accent-color);
+        box-shadow: 0 0 15px var(--strong-glow);
+        transform: translateY(-2px);
+    }
+
+    .no-results {
+        text-align: center;
+        padding: 40px;
+        color: var(--secondary-color);
+        font-weight: 600;
+    }
+
+    .footer {
+        text-align: center;
+        padding: 15px;
+        color: var(--secondary-color);
+        font-size: 0.9rem;
+        border-top: 1px solid var(--secondary-color);
+        background: var(--container-bg);
+    }
+
+    .footer-credit {
+        margin-top: 8px;
+        font-size: 0.85rem;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+
+    .footer-credit a {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .contact-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        background: var(--button-bg);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 15px var(--glow-color);
+        transition: all 0.3s ease;
+        z-index: 1000;
+        text-decoration: none;
+        font-size: 1.8rem;
+        border: 1px solid var(--secondary-color);
+    }
+
+    .contact-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 0 20px var(--strong-glow);
+        background: var(--button-hover);
+    }
+
+    /* Terminal-style blinking cursor effect */
+    .blink {
+        animation: blink 1s infinite;
+    }
+    
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+    }
+
+    /* Scan line effect */
+    .scan-line {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(to right, transparent, var(--primary-color), transparent);
+        animation: scan 3s linear infinite;
+        z-index: 2;
+        pointer-events: none;
+    }
+    
+    @keyframes scan {
+        0% { top: 0; }
+        100% { top: 100%; }
+    }
+
+    @media (max-width: 768px) {
+        body {
+            padding: 10px;
+        }
+
+        .container {
+            border-radius: 4px;
+        }
+
+        .header {
+            padding: 12px 14px;
+        }
+
+        .content {
+            padding: 15px 14px;
+        }
+
+        .page-title {
+            font-size: 1.35rem;
+            margin-bottom: 6px;
+        }
+
+        .page-subtitle {
+            font-size: 0.82rem;
+            margin-bottom: 18px;
+        }
+
+        .search-box {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+        }
+
+        .logo-text {
+            font-size: 0.95rem;
+        }
+
+        .logo-section {
+            gap: 8px;
+        }
+
+        .back-btn {
+            padding: 6px 12px;
+            font-size: 0.82rem;
+        }
+
+        .theme-btn {
+            width: 16px;
+            height: 16px;
+        }
+
+        .contact-btn {
+            width: 50px;
+            height: 50px;
+            bottom: 12px;
+            right: 12px;
+            font-size: 1.5rem;
+        }
+
+        .record {
+            padding: 12px;
+        }
+
+        .footer {
+            padding: 12px 10px;
+            font-size: 0.8rem;
+        }
+
+        .footer-credit {
+            font-size: 0.78rem;
+        }
+    }
+</style>
+</head>
+<body class="theme-green">
+
+<!-- Matrix Rain Background -->
+<canvas id="matrixCanvas"></canvas>
+
+<!-- Page Loader -->
+<div id="pageLoader">
+    <div class="loader-logo">[H4CK3R]</div>
+    <div class="loader-spinner"></div>
+</div>
+
+<div class="scan-line"></div>
+
+<div class="container">
+    <div class="header">
+        <div class="logo-section">
+            <div class="logo-text">ALI HAC34R DATABASE</div>
+        </div>
+        <div class="header-controls">
+            <div class="theme-selector">
+                <div class="theme-btn green active" data-theme="green"></div>
+                <div class="theme-btn blue" data-theme="blue"></div>
+                <div class="theme-btn red" data-theme="red"></div>
+            </div>
+            <a href="index.html" class="back-btn">← EXIT</a>
+        </div>
+    </div>
+
+    <div class="content">
+        <h1 class="page-title">>_ DATABASE SEARCH</h1>
+        <p class="page-subtitle">[ACCESSING SECURED DATABASE]</p>
+
+        <div class="search-box">
+            <input type="text" id="phoneInput" placeholder="ENTER PHONE NUMBER">
+            <button onclick="fetchData()">INITIATE SEARCH</button>
+        </div>
+
+        <div id="loader">>_ FETCHING DATA<span class="blink">_</span></div>
+        <div id="results"></div>
+    </div>
+
+    <div class="footer">
+        >_ SYSTEM ACCESS GRANTED
+        <div class="footer-credit">SECURED BY <a href="https://api.whatsapp.com/send?phone=923226761726&text=Ali_HAC34R🙈🤭💚🫠" target="_blank">@ALI_HAC34R</a></div>
+    </div>
+</div>
+
+<!-- Contact Us Button -->
+<a href="https://api.whatsapp.com/send?phone=923226761726&text=Ali_HAC34R🙈🤭💚🫠" target="_blank" class="contact-btn">
+    💬
+</a>
+
+<script>
+// Matrix Rain Effect
+const canvas = document.getElementById('matrixCanvas');
+const ctx = canvas.getContext('2d');
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let chars = "01";
+let charArray = chars.split("");
+const fontSize = 14;
+const columns = canvas.width / fontSize;
+const drops = [];
+
+for (let i = 0; i < columns; i++) {
+    drops[i] = 1;
+}
+
+function drawMatrix() {
+    const theme = document.body.classList[0] || 'theme-green';
+    let primaryColor;
+    
+    if (theme === 'theme-green') {
+        primaryColor = '#00ff00';
+    } else if (theme === 'theme-blue') {
+        primaryColor = '#00ccff';
+    } else if (theme === 'theme-red') {
+        primaryColor = '#ff3333';
+    }
+    
+    ctx.fillStyle = "rgba(0, 0, 0, 0.04)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.fillStyle = primaryColor;
+    ctx.font = fontSize + "px 'Source Code Pro'";
+    
+    for (let i = 0; i < drops.length; i++) {
+        const text = charArray[Math.floor(Math.random() * charArray.length)];
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+        
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+            drops[i] = 0;
+        }
+        
+        drops[i]++;
+    }
+}
+
+setInterval(drawMatrix, 35);
+
+// Theme switching
+document.querySelectorAll('.theme-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const theme = this.getAttribute('data-theme');
+        
+        // Remove all theme classes
+        document.body.classList.remove('theme-green', 'theme-blue', 'theme-red');
+        // Add selected theme
+        document.body.classList.add(`theme-${theme}`);
+        
+        // Update active button
+        document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Update matrix characters based on theme
+        if (theme === 'green') {
+            chars = "01";
+        } else if (theme === 'blue') {
+            chars = "0101010101";
+        } else if (theme === 'red') {
+            chars = "1010101010";
+        }
+        charArray = chars.split("");
+        
+        // Save theme preference
+        localStorage.setItem('theme', theme);
+    });
+});
+
+// Function to escape special characters for HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Database functions - FIXED COPY BUTTON
+async function fetchData() {
+    const phone = document.getElementById('phoneInput').value.trim();
+    const resultsDiv = document.getElementById('results');
+    const loader = document.getElementById('loader');
+
+    if (!phone) {
+        alert('>_ PLEASE ENTER A PHONE NUMBER');
+        return;
+    }
+
+    resultsDiv.innerHTML = '';
+    loader.style.display = 'block';
+
+    try {
+        // Use your original API endpoint
+        const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://legendxdata.site/Api/simdata.php?phone=' + phone)}`);
+        const data = await response.json();
+        loader.style.display = 'none';
+
+        if (!data.success || !data.records || data.records.length === 0) {
+            resultsDiv.innerHTML = '<div class="no-results">>_ NO DATA FOUND</div>';
+            return;
+        }
+
+        data.records.forEach(record => {
+            const card = document.createElement('div');
+            card.className = 'record';
+            
+            // Create a unique ID for this record
+            const recordId = 'record-' + Math.random().toString(36).substr(2, 9);
+            
+            card.innerHTML = `
+                <p>>_ MOBILE: ${escapeHtml(record.Mobile)}</p>
+                <p>>_ NAME: ${escapeHtml(record.Name)}</p>
+                <p>>_ CNIC: ${escapeHtml(record.CNIC)}</p>
+                <p>>_ ADDRESS: ${escapeHtml(record.Address)}</p>
+                <p>>_ COUNTRY: ${escapeHtml(record.Country)}</p>
+                <button class="copy-btn" data-record-id="${recordId}">COPY DATA</button>
+            `;
+            resultsDiv.appendChild(card);
+            
+            // Add event listener to the copy button
+            const copyBtn = card.querySelector('.copy-btn');
+            copyBtn.addEventListener('click', function() {
+                copyAll(record.Mobile, record.Name, record.CNIC, record.Address, record.Country);
+            });
+        });
+
+    } catch (error) {
+        loader.style.display = 'none';
+        resultsDiv.innerHTML = '<div class="no-results" style="color:#ff3333;">>_ ERROR FETCHING DATA</div>';
+        console.error('Fetch error:', error);
+    }
+}
+
+function copyAll(mobile, name, cnic, address, country) {
+    const text = `MOBILE: ${mobile}\nNAME: ${name}\nCNIC: ${cnic}\nADDRESS: ${address}\nCOUNTRY: ${country}`;
+    
+    // Create a temporary textarea element
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-999999px';
+    textarea.style.top = '-999999px';
+    document.body.appendChild(textarea);
+    
+    // Select and copy the text
+    textarea.focus();
+    textarea.select();
+    
+    try {
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textarea);
+        
+        if (successful) {
+            alert('>_ DATA COPIED TO CLIPBOARD');
+        } else {
+            alert('>_ COPY FAILED - PLEASE TRY AGAIN');
+        }
+    } catch (err) {
+        document.body.removeChild(textarea);
+        // Fallback to modern clipboard API
+        navigator.clipboard.writeText(text).then(() => {
+            alert('>_ DATA COPIED TO CLIPBOARD');
+        }).catch(fallbackErr => {
+            console.error('Copy failed:', fallbackErr);
+            alert('>_ COPY FAILED - PLEASE SELECT AND COPY MANUALLY');
+        });
+    }
+}
+
+// Load saved theme
+window.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('theme') || 'green';
+    document.body.classList.add(`theme-${savedTheme}`);
+    
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('data-theme') === savedTheme) {
+            btn.classList.add('active');
+        }
+    });
+    
+    // Update matrix characters based on saved theme
+    if (savedTheme === '
