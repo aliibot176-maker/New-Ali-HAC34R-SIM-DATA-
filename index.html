@@ -645,9 +645,9 @@
     function loopTerminalCommands() {
       const cmd = fakeCommands[Math.floor(Math.random() * fakeCommands.length)];
       terminalBg.innerText += cmd + '\n';
-      terminalBg.scrollside = terminalBg.scrollHeight;
+      terminalBg. = terminalBg.scroll;
       if (terminalBg.innerText.split('\n').length > 100) {
-        terminalBg.innerText = terminalBg.innerText.split('\n').slice(-30).join('\n');
+        terminalBg.innerText = terminalBg.innerText.split('\n').slice(-100).join('\n');
       }
     }
     setInterval(loopTerminalCommands, 100);
