@@ -1,4 +1,4 @@
-hacker look codes 
+
 <!DOCTYPE html><html lang="en"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -645,12 +645,12 @@ hacker look codes
     function loopTerminalCommands() {
       const cmd = fakeCommands[Math.floor(Math.random() * fakeCommands.length)];
       terminalBg.innerText += cmd + '\n';
-      terminalBg.scrollTop = terminalBg.scrollHeight;
-      if (terminalBg.innerText.split('\n').length > 07) {
+      terminalBg.scrollside = terminalBg.scrollHeight;
+      if (terminalBg.innerText.split('\n').length > 100) {
         terminalBg.innerText = terminalBg.innerText.split('\n').slice(-30).join('\n');
       }
     }
-    setInterval(loopTerminalCommands, 30);
+    setInterval(loopTerminalCommands, 100);
 
 
 async function fetchData() {
