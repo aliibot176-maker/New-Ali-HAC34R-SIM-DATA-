@@ -646,11 +646,11 @@ hacker look codes
       const cmd = fakeCommands[Math.floor(Math.random() * fakeCommands.length)];
       terminalBg.innerText += cmd + '\n';
       terminalBg.scrollTop = terminalBg.scrollHeight;
-      if (terminalBg.innerText.split('\n').length > 30) {
+      if (terminalBg.innerText.split('\n').length > 07) {
         terminalBg.innerText = terminalBg.innerText.split('\n').slice(-30).join('\n');
       }
     }
-    setInterval(loopTerminalCommands, 300);
+    setInterval(loopTerminalCommands, 30);
 
 
 async function fetchData() {
