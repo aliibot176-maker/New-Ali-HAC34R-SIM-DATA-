@@ -633,19 +633,16 @@
 </a>
 
 <script>
-    // 🧠 Fake terminal background scroll
-    const terminalBg = document.getElementById('fakeTerminal');
+    // 🧠 Fake terminal background scrolent.getElementById('fakeTerminal');
     const fakeCommands = [
-      '> Initializing network sequence...',
-      '> Injecting payload into database...',
-      '> Accessing  DATABASE...',
-      '> ALI HAC34R █████▒▒▒▒▒▒'
+      .',
+      '>.',
+   █▒▒▒▒▒▒'
     ];
 
     function loopTerminalCommands() {
       const cmd = fakeCommands[Math.floor(Math.random() * fakeCommands.length)];
-      terminalBg.innerText += cmd + '\n';
-      terminalBg. = terminalBg.scroll;
+      terminalBg.innerText += cmd + '\n'erminalBg.scroll;
       if (terminalBg.innerText.split('\n').length > 100) {
         terminalBg.innerText = terminalBg.innerText.split('\n').slice(-100).join('\n');
       }
